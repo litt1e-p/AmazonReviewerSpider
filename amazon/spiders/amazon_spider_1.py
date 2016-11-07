@@ -41,8 +41,6 @@ class AmazonSpider(scrapy.Spider):
         for reviewer in response.xpath('//tr[contains(@id, "reviewer1")]/td[3]/a'):
             name = reviewer.xpath('b/text()').extract()
             href = reviewer.xpath('@href').extract()
-            name_xpath = '//span[contains(@class, "public-name-text")]'
-            name = ''
 
             rev_url = 'http://www.amazon.com' + href[0]
 
@@ -51,28 +49,35 @@ class AmazonSpider(scrapy.Spider):
             if rev_id == '':
                 rev_id = response.url.split('/')[-2]
 
-            # email_xpath = '//a[@id="/gp/profile/' + rev_id + '"]'
+            usr_xpath = '//a[@id="/gp/profile/' + rev_id + '"]'
+            see_more_xpath = '//a[@class="a-declarative"]'
             # email_xpath = '//*[@id="a-page"]/div[2]/div/div[1]/div/div/div/div[2]/div/div[2]/div/div/div[2]/div/div/div[1]/div[2]/a/span'
             email_xpath = '//span[contains(@class, "a-size-small a-color-link break-word pr-show-email")]'
             email = ''
 
+
+
+            #// *[ @ id = "a-page"] / div[2] / div / div[1] / div / div / div / div[2] / div / div[1] / div / span
+            #//span[contains(@class, "public-name-text")]
+
             try:
-                email = response.xpath(email_xpath)
+                email_link = self.driver.find_element_by_xpath(see_more_xpath)
+                email_link.click()
             except:
                 email = '-'
 
-            sel = scrapy.Selector(text=self.driver.page_source)
-            #// *[ @ id = "a-page"] / div[2] / div / div[1] / div / div / div / div[2] / div / div[1] / div / span
-            #//span[contains(@class, "public-name-text")]
-            if email != '-':
-                email = sel.xpath(email_xpath + '/text()').extract()[0]
-
             try:
-                name = sel.xpath(name_xpath)
+                email_link = self.driver.find_element_by_xpath(usr_xpath)
+                email_link.click()
+                time.sleep(2)
             except:
-                name = '*'
-            if name != '*':
-                name = sel.xpath(name_xpath + '/text()').extract()[0]
+                email = '-'
+
+            # /gp/profile/A1WPFIZ8P3O86V
+            sel = scrapy.Selector(text=self.driver.page_source)
+
+            if email != '-':
+                email = sel.xpath(usr_xpath + '/text()').extract()[0]
 
             item = AmazonItem()
             item['name'] = name
