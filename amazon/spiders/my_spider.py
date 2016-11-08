@@ -23,6 +23,9 @@ class AmazonSpider(scrapy.Spider):
         driver_location = "/Users/mac/bin/chromedriver"
         options = webdriver.ChromeOptions()
         options.add_argument('--lang=es')
+        options.add_argument("--start-maximized")
+        options.add_argument('--lang=es')
+        options.add_experimental_option("prefs", {'network.protocol-handler.external.mailto': False})
         self.driver = webdriver.Chrome(executable_path=driver_location, chrome_options=options)
         self.driver_login()
 
@@ -34,9 +37,16 @@ class AmazonSpider(scrapy.Spider):
         # email_xpath = '//span[contains(@class, "a-size-small a-color-link break-word pr-show-email")]'
         # email_a_xpath = '//a[@class＝"a-declarative"]'
         email_xpath = '//span[contains(@class, "a-size-small a-color-link break-word pr-show-email")]'
+        see_more_xpath = '//span[contains(text(), "See more")]/parent::a'
         email = ''
         name_xpath = '//span[contains(@class, "public-name-text")]'
         name = ''
+
+        try:
+            more_link = self.driver.find_element_by_xpath(see_more_xpath)
+            more_link.click()
+        except:
+            time.sleep(2)
 
         try:
             email = response.xpath(email_xpath)

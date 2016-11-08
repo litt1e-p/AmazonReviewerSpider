@@ -7,6 +7,9 @@ from selenium import webdriver
 # from selenium.webdriver.firefox.webdriver import FirefoxProfile
 from amazon.items import AmazonItem
 from selenium.webdriver.chrome.options import Options
+import urllib2
+import cookielib
+import re
 
 class AmazonSpider(scrapy.Spider):
     num = 1
@@ -19,9 +22,14 @@ class AmazonSpider(scrapy.Spider):
 
     i = start
 
-    name = 'amazon_' + str(num)
+
+
+    name = 'amazon_t_' + str(num)
 
     def __init__(self):
+        cookie_file_name = 'cookie.txt'
+        self.cookie = cookielib.MozillaCookieJar(cookie_file_name)
+
         self.start_urls = ['http://www.amazon.com/review/top-reviewers?page=' + str(self.start)]
         self.allowed_domains = ['www.amazon.com']
         #        self.profile = FirefoxProfile('/home/romitas/.mozilla/firefox/68h3udd9.AmazonScraper')
@@ -56,23 +64,19 @@ class AmazonSpider(scrapy.Spider):
             email_xpath = '//span[contains(@class, "a-size-small a-color-link break-word pr-show-email")]'
             email = ''
 
-
+            # save cookie
+            self.cookie.save(ignore_discard=True, ignore_expires=True)
 
             #// *[ @ id = "a-page"] / div[2] / div / div[1] / div / div / div / div[2] / div / div[1] / div / span
             #//span[contains(@class, "public-name-text")]
 
             try:
-                email_link = self.driver.find_element_by_xpath(see_more_xpath)
-                email_link.click()
+                eny_id = re.compile(r'.*\/profile\/(\w+)').search(rev_url).group(1)
+                email_attempt = self.email_fetch(eny_id)
+                print 'email_attempt@@@@@@@@@@@: ' + email_attempt
             except:
                 email = '-'
 
-            try:
-                email_link = self.driver.find_element_by_xpath(usr_xpath)
-                email_link.click()
-                time.sleep(2)
-            except:
-                email = '-'
 
             # /gp/profile/A1WPFIZ8P3O86V
             sel = scrapy.Selector(text=self.driver.page_source)
@@ -99,7 +103,7 @@ class AmazonSpider(scrapy.Spider):
 
         submit = self.driver.find_element_by_xpath('//input[@id="signInSubmit"]')
 
-        # Sure won't work this way. 
+        # Sure won't work this way.
         # In order to login you have to put your own Amazon email/password here
         login.send_keys('<email>')
         password.send_keys('<password>')
@@ -128,3 +132,15 @@ class AmazonSpider(scrapy.Spider):
         item['email'] = email
 
         yield item
+
+    def email_fetch(self, eny_id):
+        email = '-'
+
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookie))
+        url = 'https://www.amazon.com/gp/profile/'+eny_id+'/customer_email'
+        print 'rev_id=========: ' + eny_id + ', url**********: ' + url
+        result = opener.open(url)
+        if result['status'] == 'ok':
+            email = result['data']['email']
+
+        return email
