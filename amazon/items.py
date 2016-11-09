@@ -13,3 +13,4 @@ class AmazonItem(Item):
     # name = scrapy.Field()
     name  = Field()
     email = Field()
+    idstr = Field()

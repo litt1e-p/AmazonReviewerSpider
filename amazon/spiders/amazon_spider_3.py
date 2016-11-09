@@ -4,9 +4,10 @@ import time
 import scrapy
 import selenium
 from selenium import webdriver
-# from selenium.webdriver.firefox.webdriver import FirefoxProfile
+from selenium.webdriver.firefox.webdriver import FirefoxProfile
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium.webdriver import DesiredCapabilities
 from amazon.items import AmazonItem
-from selenium.webdriver.chrome.options import Options
 import re
 
 class AmazonSpider(scrapy.Spider):
@@ -16,26 +17,26 @@ class AmazonSpider(scrapy.Spider):
 #    start = (num - 1) * pages + 1
 #    end = num * pages + 1
 #     start = 0 + 1
-    start = 33 + 1
+    start = 34 + 1
     # end = 1000 + 1
-    end = 34 + 1
+    end = 35 + 1
 
     i = start
 
-    name = 'amazon_1_' + str(num)
+    name = 'amazon_3_' + str(num)
 
     def __init__(self):
         self.start_urls = ['https://www.amazon.com/review/top-reviewers?page=' + str(self.start)]
         self.allowed_domains = ['www.amazon.com']
-        #        self.profile = FirefoxProfile('/home/romitas/.mozilla/firefox/68h3udd9.AmazonScraper')
-        # profile = FirefoxProfile()
-        # profile.set_preference('network.protocol-handler.external.mailto', False)
-        # self.driver = webdriver.Firefox(self.profile)
+        # self.profile = FirefoxProfile('/home/romitas/.mozilla/firefox/68h3udd9.AmazonScraper')
+        binary = FirefoxBinary(firefox_path='/Applications/Firefox.app/Contents/MacOS/Firefox')
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('network.protocol-handler.external.mailto', False)
+        profile.add_extension(extension='/Applications/Firefox.app/Contents/Resources/browser/features/e10srollout@mozilla.org.xpi')
+        firefox_capabilities = DesiredCapabilities.FIREFOX
+        firefox_capabilities['marionette'] = True
+        self.driver = webdriver.Firefox(firefox_profile=profile, firefox_binary=binary, capabilities=firefox_capabilities)
 
-        driver_location = "/Users/mac/bin/chromedriver"
-        options = webdriver.ChromeOptions()
-        options.add_argument('--lang=es')
-        self.driver = webdriver.Chrome(executable_path=driver_location, chrome_options=options)
         self.driver_login()
 
 
@@ -89,32 +90,8 @@ class AmazonSpider(scrapy.Spider):
 
         submit = self.driver.find_element_by_xpath('//input[@id="signInSubmit"]')
 
-        # Sure won't work this way. 
+        # Sure won't work this way.
         # In order to login you have to put your own Amazon email/password here
         # login.send_keys('<email>')
         # password.send_keys('<password>')
         submit.click()
-
-    #
-    # def parse_reviewer(self):
-    #     time.sleep(5)
-    #     cur_url = self.driver.current_url
-    #     rev_id = cur_url.split('/')[-1]
-    #     if rev_id == '':
-    #         rev_id = response.url.split('/')[-2]
-    #
-    #     email_xpath = '//a[@id="/gp/profile/' + rev_id + '"]'
-    #
-    #     email_link = self.driver.find_element_by_xpath(email_xpath)
-    #     email_link.click()
-    #
-    #     sel = scrapy.Selector(text=driver.page_source)
-    #
-    #     email = sel.xpath(email_xpath + '/text()').extract()[0]
-    #     name  = sel.xpath('//h1/text()').extract()[0]
-    #
-    #     item = Amazon.Item()
-    #     item['name'] = name
-    #     item['email'] = email
-    #
-    #     yield item

@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import urllib2
 import cookielib
 import re
+import json
 
 class AmazonSpider(scrapy.Spider):
     num = 1
@@ -24,11 +25,9 @@ class AmazonSpider(scrapy.Spider):
 
 
 
-    name = 'amazon_t_' + str(num)
+    name = 'amazon_2_' + str(num)
 
     def __init__(self):
-        cookie_file_name = 'cookie.txt'
-        self.cookie = cookielib.MozillaCookieJar(cookie_file_name)
 
         self.start_urls = ['http://www.amazon.com/review/top-reviewers?page=' + str(self.start)]
         self.allowed_domains = ['www.amazon.com']
@@ -36,6 +35,11 @@ class AmazonSpider(scrapy.Spider):
         # profile = FirefoxProfile()
         # profile.set_preference('network.protocol-handler.external.mailto', False)
         # self.driver = webdriver.Firefox(self.profile)
+        self.cookie_file_name = 'cookie.txt'
+        cookie = cookielib.LWPCookieJar(self.cookie_file_name)
+        # save cookie
+        cookie.save(ignore_discard=True, ignore_expires=True)
+        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
 
         driver_location = "/Users/mac/bin/chromedriver"
         options = webdriver.ChromeOptions()
@@ -64,12 +68,14 @@ class AmazonSpider(scrapy.Spider):
             email_xpath = '//span[contains(@class, "a-size-small a-color-link break-word pr-show-email")]'
             email = ''
 
-            # save cookie
-            self.cookie.save(ignore_discard=True, ignore_expires=True)
+            temp_cookies = self.driver.get_cookies()
+            with open(self.cookie_file_name, 'w') as buffers:
+                json.dump(temp_cookies, buffers)
+
 
             #// *[ @ id = "a-page"] / div[2] / div / div[1] / div / div / div / div[2] / div / div[1] / div / span
             #//span[contains(@class, "public-name-text")]
-
+            eny_id = '-'
             try:
                 eny_id = re.compile(r'.*\/profile\/(\w+)').search(rev_url).group(1)
                 email_attempt = self.email_fetch(eny_id)
@@ -87,7 +93,7 @@ class AmazonSpider(scrapy.Spider):
             item = AmazonItem()
             item['name'] = name
             item['email'] = email
-
+            item['idstr'] = eny_id
             yield item
 
         self.i += 1
@@ -109,38 +115,13 @@ class AmazonSpider(scrapy.Spider):
         password.send_keys('<password>')
         submit.click()
 
-
-    def parse_reviewer(self):
-        time.sleep(5)
-        cur_url = self.driver.current_url
-        rev_id = cur_url.split('/')[-1]
-        if rev_id == '':
-            rev_id = response.url.split('/')[-2]
-
-        email_xpath = '//a[@id="/gp/profile/' + rev_id + '"]'
-
-        email_link = self.driver.find_element_by_xpath(email_xpath)
-        email_link.click()
-
-        sel = scrapy.Selector(text=driver.page_source)
-
-        email = sel.xpath(email_xpath + '/text()').extract()[0]
-        name  = sel.xpath('//h1/text()').extract()[0]
-
-        item = Amazon.Item()
-        item['name'] = name
-        item['email'] = email
-
-        yield item
-
     def email_fetch(self, eny_id):
         email = '-'
-
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookie))
         url = 'https://www.amazon.com/gp/profile/'+eny_id+'/customer_email'
         print 'rev_id=========: ' + eny_id + ', url**********: ' + url
-        result = opener.open(url)
+        result = self.opener.open(url)
+        print 'resultTTTTTTTTTTTTTTT ' + result
         if result['status'] == 'ok':
             email = result['data']['email']
-
+        print 'email:::::::::: ' + email
         return email
