@@ -32,7 +32,7 @@ class AmazonSpider(scrapy.Spider):
         binary = FirefoxBinary(firefox_path='/Applications/Firefox.app/Contents/MacOS/Firefox')
         profile = webdriver.FirefoxProfile()
         profile.set_preference('network.protocol-handler.external.mailto', False)
-        profile.add_extension(extension='/Applications/Firefox.app/Contents/Resources/browser/features/e10srollout@mozilla.org.xpi')
+        # profile.add_extension(extension='/Applications/Firefox.app/Contents/Resources/browser/features/e10srollout@mozilla.org.xpi')
         firefox_capabilities = DesiredCapabilities.FIREFOX
         firefox_capabilities['marionette'] = True
         self.driver = webdriver.Firefox(firefox_profile=profile, firefox_binary=binary, capabilities=firefox_capabilities)
@@ -92,6 +92,6 @@ class AmazonSpider(scrapy.Spider):
 
         # Sure won't work this way.
         # In order to login you have to put your own Amazon email/password here
-        # login.send_keys('<email>')
-        # password.send_keys('<password>')
+        login.send_keys('<email>')
+        password.send_keys('<password>')
         submit.click()

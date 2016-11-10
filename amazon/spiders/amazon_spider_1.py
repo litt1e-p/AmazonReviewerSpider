@@ -91,8 +91,8 @@ class AmazonSpider(scrapy.Spider):
 
         # Sure won't work this way. 
         # In order to login you have to put your own Amazon email/password here
-        # login.send_keys('<email>')
-        # password.send_keys('<password>')
+        login.send_keys('<email>')
+        password.send_keys('<password>')
         submit.click()
 
     #
