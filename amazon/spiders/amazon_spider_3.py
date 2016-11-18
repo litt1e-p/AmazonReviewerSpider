@@ -17,9 +17,9 @@ class AmazonSpider(scrapy.Spider):
 #    start = (num - 1) * pages + 1
 #    end = num * pages + 1
 #     start = 0 + 1
-    start = 34 + 1
+    start = 721
     # end = 1000 + 1
-    end = 35 + 1
+    end = 740
 
     i = start
 
@@ -92,6 +92,6 @@ class AmazonSpider(scrapy.Spider):
 
         # Sure won't work this way.
         # In order to login you have to put your own Amazon email/password here
-        login.send_keys('<email>')
-        password.send_keys('<password>')
+        # login.send_keys('<email>')
+        # password.send_keys('<password>')
         submit.click()
